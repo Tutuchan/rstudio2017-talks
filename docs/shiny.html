@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Shiny: What’s New? What’s Next?</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Joe Cheng" />
+    <meta name="date" content="2017-01-13" />
+    <link href="libs/remark-css/example.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Shiny: What’s New? What’s Next?
+## rstudio::conf 2017
+### Joe Cheng
+### January 13, 2017
+
+---
+
+
+
+
+## What we've been working on
+- Shiny releases
+- Shiny Server (Pro) releases
+- Education
+  - ShinyConf 2016 (with videos)
+  - Ever-improving [Dev Center](http://shiny.rstudio.com)
+
+---
+
+## Shiny 0.13 (January 2016)
+
+**Modules**  
+Break large apps into smaller pieces
+
+**Gadgets**  
+Make interactive tools that are usable from R
+
+**Error stack traces**  
+Much easier to fix errors
+
+**`req()`**  
+Eliminate spurious errors
+
+---
+
+## Shiny 0.14 (September 2016)
+
+**Bookmarkable state**  
+Create shareable link to the exact state of an app
+
+**Notification messages**  
+Alert users to events
+
+**Modal dialogs**  
+Display task-oriented UI
+
+**`insertUI`/`removeUI`**  
+Dynamically add or remove pieces of UI
+
+**Automatic reconnection**  
+Recover gracefully from network issues
+
+---
+
+## Shiny 1.0 (January 2017)
+
+**Automated testing**  
+New practical testing tools for Shiny apps
+
+**Reactive `debounce` and `throttle`**  
+Slow down overly chatty reactive inputs
+
+**Bug fixes**
+
+---
+
+## Near future
+
+**API Endpoints**  
+Allow programs to retrieve data from Shiny apps
+
+**Better unit testing**  
+Official support for `testthat`-style unit testing
+
+### Up next...?
+- More API endpoints (`POST`/`PUT` style)
+- Better support for long-running calculations
+
+---
+class: middle
+
+# Automated testing
+
+---
+
+## Automated testing
+
+- Shiny is increasingly being used for mission critical tasks
+- Bugs can be introduced any time anything is changed
+  - Application code
+  - Shiny version
+  - R package dependencies
+  - System libraries
+  - OS version
+- Packrat can help by stabilizing package dependencies, but can't help when you actually want to upgrade
+
+---
+
+## Introducing shinytest
+
+The `shinytest` package is our official solution for integration/system testing of Shiny apps.
+
+
+```r
+devtools::install_github("MangoTheCat/shinytest")
+```
+
+_Credit: Gábor Csárdi (Mango Solutions) and Winston Chang (RStudio)_
+
+---
+
+## How shinytest works
+
+- Easily create **test scripts** that **set input values**,
+--
+
+- resulting in changing **outputs** and **reactives**,
+--
+
+- which can be captured as **snapshots** and **screenshots**.
+
+--
+
+The test script(s) and their "last known good" snapshots are committed into source control.
+
+--
+
+Running a test means executing the test script and comparing the resulting snapshot to the last known good snapshot. Any differences must be inspected and either fixed, or committed to the last known good snapshot.
+
+---
+class: middle
+
+# Demo
+
+---
+
+## Recap
+
+- `recordTest()` to create a test script
+- `testApp()` to run the test script and compare to the baseline
+- `snapshotUpdate()` to set/replace the baseline
+
+---
+
+## Limitations
+
+- Not suitable for 100% of Shiny apps
+  - Interactions must be reproducible via replaying Shiny inputs
+  - Same output must be expected every time (i.e. live data sources)
+- API is very new and may change before CRAN release
+- Some of the underlying dependencies are still alpha-quality
+
+Wait for CRAN release if these are concerns for you!
+
+---
+class: middle
+
+# APIs
+
+---
+
+## APIs
+
+Shiny is great for making interactive apps for **humans** to consume.
+
+--
+
+Sometimes we want to take those apps and make parts of them easier for **other programs** to consume.
+
+- R
+- curl
+- PHP/Java/C#/Python
+
+---
+
+## Shiny APIs
+
+**Q:** Lots of solutions for making cross-language R APIs already exist ([OpenCPU](https://www.opencpu.org/), [Rserve](https://rforge.net/Rserve/), [deployR](https://msdn.microsoft.com/en-us/microsoft-r/deployr-about)), why should Shiny do this?
+
+**A:** We can make a great solution for Shiny apps that already exist and want to *also* publish data via APIs (reusing existing logic).
+
+---
+class: middle
+
+## Demo
+
+---
+
+## Recap
+
+- API endpoints are analogous to Shiny outputs
+&lt;pre&gt;session$api&amp;#x0024;plot &lt;- servePlot(...)&lt;/pre&gt;
+- URL parameters or JSON request bodies become input values
+- A Shiny session is started for each HTTP request; the reactive loop executes once; then the session ends
+- Plots, CSV, text, JSON support "out of the box", easy to extend to any format
+- Authentication not yet supported
+- Currently intended for data retrieval APIs only — but stay tuned
+
+---
+class: middle
+
+# Thanks!
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true
+});
+if (window.HTMLWidgets) slideshow.on('showSlide', function (slide) {setTimeout(function() {window.dispatchEvent(new Event('resize'));}, 100)});</script>
+
+  </body>
+</html>
