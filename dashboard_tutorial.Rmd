@@ -1,0 +1,384 @@
+---
+title: "Tutorial: Dashboards in Shiny"
+subtitle: "rstudio::conf 2017"
+author: "Winston Chang and Joe Cheng"
+date: "January 13, 2017"
+always_allow_html: yes
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+    mathjax: null
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+```
+
+```{css}
+.countdown-timer .countdown-timer-time {
+  font-family: inherit;
+  font-size: 50pt;
+}
+.countdown-timer button {
+  border: 0.25px solid #CCC;
+  background-color: white;
+  outline: none;
+}
+.countdown-timer button:active {
+  border: 1px solid #CCC;
+  background-color: silver;
+  color: white;
+}
+```
+
+## Before we begin
+
+Make sure you get an RStudio Server Pro account and log in!
+
+Instructions: TODO
+
+_(Supported browsers: Chrome, Firefox, Safari, IE10+. Sorry, no MS Edge.)_
+
+---
+
+## Say hello
+
+#### Please take a moment to introduce yourself to your neighbors.
+
+- Name and affiliation
+- How much experience with R
+- How much experience with Shiny
+- How much experience building dashboards
+
+Over the course of the next two hours, we will be doing a bunch of coding exercises. Please help each other!
+
+```{r echo=FALSE}
+countdown::countdown_timer(180)
+```
+
+---
+
+## What sets dashboards apart from other apps?
+
+- Automatic updating
+- Potentially many viewers looking at the same data
+- May or may not be interactive
+- "Ten-foot" user interface
+
+---
+
+## Today we're going to cover
+
+- Server: Reactivity concepts that are general, but particularly helpful for dashboarding (Joe Cheng)
+- UI: Styling your app to look like a traditional dashboard (Winston Chang)
+
+---
+class: middle
+
+# Server
+
+---
+
+## Problem statement
+
+- New data comes in, either continuously or on a schedule (whether every 15s or every 24h)
+  - All active sessions should automatically receive the new data
+--
+
+- May need to be transformed, aggregated, summarized, etc.
+--
+
+- Visualize data as
+  - plots
+  - tables
+  - scalar values (e.g. "Total unique visitors today: 45,124")
+--
+
+- Call attention to exceptional conditions (e.g. "Maximum capacity exceeded", "Monthly sales goal reached")
+
+---
+
+## Techniques we'll cover
+
+- Using reactiveFileReader/reactivePoll functions to automatically pick up new data
+- Creating networks of reactive expressions
+- Optimizing performance
+
+---
+class: middle
+
+## reactiveFileReader and reactivePoll
+
+---
+
+## User-driven events vs. data-driven events
+In most Shiny apps, reactivity is driven by **user gestures** (changes to the `input` object).
+
+In dashboards, we want to drive reactivity using **changing data sources**.
+
+Shiny comes with two functions designed to make it easy to treat changing data as reactive sources:
+
+- `reactiveFileReader`
+- `reactivePoll`
+
+---
+
+## But wait...
+
+Can't we just do this?
+
+```{r eval=FALSE}
+dataset <- reactive({
+  result <- read.csv("data.csv")
+{{ invalidateLater(5000)}}
+  result
+})
+
+output$plot <- renderPlot({
+  plot(dataset()) # or whatever
+})
+```
+
+--
+
+#### This works, but is incredibly wasteful!
+
+Every 5 seconds we will read all the data, and replot it. If `data.csv` changes every 15 minutes on average, then 99.4% of that work will be wasted effort.
+
+Ideally, we only want `dataset` to invalidate when the file actually changes.
+
+---
+
+## reactiveFileReader
+
+Creates a reactive expression that always has the "up to date" version of your file data.
+
+```{r eval=FALSE}
+dataset <- reactiveFileReader(
+  intervalMillis = 1000,
+  session = session,
+  filePath = "data.csv",
+  readFunc = read.csv
+)
+
+output$plot <- renderPlot({
+  plot(dataset()) # or whatever
+})
+```
+
+---
+
+## reactiveFileReader
+
+Creates a reactive expression that always has the "up to date" version of your file data.
+
+```{r eval=FALSE}
+dataset <- reactiveFileReader(
+{{ intervalMillis = 1000,}}
+  session = session,
+  filePath = "data.csv",
+  readFunc = read.csv
+)
+```
+
+_How often to check if the file has changed (based on last-modified time)._
+
+---
+
+## reactiveFileReader
+
+Creates a reactive expression that always has the "up to date" version of your file data.
+
+```{r eval=FALSE}
+dataset <- reactiveFileReader(
+  intervalMillis = 1000,
+{{ session = session,}}
+  filePath = "data.csv",
+  readFunc = read.csv
+)
+```
+
+_The user session, or `NULL`._
+
+_If non-null, then the reactive file reader will automatically stop when its session ends._
+
+---
+
+## reactiveFileReader
+
+Creates a reactive expression that always has the "up to date" version of your file data.
+
+```{r eval=FALSE}
+dataset <- reactiveFileReader(
+  intervalMillis = 1000,
+  session = session,
+{{ filePath = "data.csv",}}
+  readFunc = read.csv
+)
+```
+
+_The path to the data file. Must be a single file, not a directory name or glob pattern._
+
+---
+
+## reactiveFileReader
+
+Creates a reactive expression that always has the "up to date" version of your file data.
+
+```{r eval=FALSE}
+dataset <- reactiveFileReader(
+  intervalMillis = 1000,
+  session = session,
+  filePath = "data.csv",
+{{ readFunc = read.csv}}
+)
+```
+
+_The function that should be called (with `filePath` as an argument) whenever the file changes. The reactive expression then assumes the function's return value._
+
+_We're using a function from `base` here, but you can use any function, including [anonymous functions](http://adv-r.had.co.nz/Functional-programming.html#anonymous-functions)._
+
+---
+
+## reactiveFileReader
+
+Creates a reactive expression that always has the "up to date" version of your file data.
+
+```{r eval=FALSE}
+dataset <- reactiveFileReader(
+  intervalMillis = 1000,
+  session = session,
+  filePath = "data.csv",
+  readFunc = read.csv,
+{{ stringsAsFactors = FALSE}}
+)
+```
+
+_You can also add any other named arguments, and they'll be passed to `readFunc` whenever it's invoked._
+
+---
+class: middle
+
+## Demo: tutorial_demos/01_file_reader.R
+
+---
+
+## Your turn
+
+#### Create a new app that uses reactiveFileReader against a different kind of data.
+
+Feel free to use `tutorial_demos/01_file_reader.R` as a starting point.
+
+Some possibilities:
+
+- Unstructured plaintext (`readLines`)
+- Excel (`readxl::read_excel`)
+- RDS (`readRDS`)
+
+```{r echo=FALSE}
+countdown::countdown_timer(300)
+```
+
+---
+
+## reactivePoll
+
+**reactiveFileReader is limited to files on disk**. It doesn't work for non-file-based data sources like databases or APIs.
+
+--
+
+**reactivePoll is a generalization of reactiveFileReader.** You give it two functions.
+
+---
+
+## reactivePoll
+
+Creates a reactive expression that always has the "up to date" version of your ~~file~~ data.
+
+```{r eval=FALSE}
+dataset <- reactivePoll(
+  intervalMillis = 1000,
+  session = session,
+{{ checkFunc = ...,}}
+  valueFunc = ...
+)
+```
+
+_A function that can execute quickly, and merely determine if anything has changed._
+
+---
+
+## reactivePoll
+
+Creates a reactive expression that always has the "up to date" version of your ~~file~~ data.
+
+```{r eval=FALSE}
+dataset <- reactivePoll(
+  intervalMillis = 1000,
+  session = session,
+  checkFunc = ...,
+{{ valueFunc = ...}}
+)
+```
+
+_A function with the (potentially expensive) logic for actually reading the data._
+
+---
+
+## Example: Database
+
+The "check" function might return the number of rows in a table, or the max value of a timestamp column.
+
+The "value" function actually returns the contents of the table (or some aggregation thereof).
+
+```{r eval=FALSE}
+dataset <- reactivePoll(1000, session,
+  checkFunc = function() {
+    # Return the latest timestamp
+    DBI::dbGetQuery(dbConn, "SELECT MAX(updated) FROM log;")
+  },
+  valueFunc = function() {
+    # Return the 20 most recently updated rows
+    DBI::dbGetQuery(dbConn,
+      "SELECT * FROM log ORDER BY updated DESC LIMIT 20;"
+    )
+  }
+)
+```
+
+---
+
+## checkFunc details
+
+**It is important that the `checkFunc` function actually be fast!** It will block the R process while it runs!
+
+(The slower it is, the greater you should make the polling interval.)
+
+--
+
+**The `checkFunc` function should not return `TRUE` or `FALSE` for changed/unchanged.** Instead, **return a value** (like the timestamp, or the count), and reactivePoll itself will keep track of whether that value is the same as the previous value or not.
+
+---
+
+## Example: Web API
+
+The `checkFunc` could do an HTTP HEAD request and check the `Last-Modified` and/or `ETag` HTTP headers.
+
+The `valueFunc` function does a full GET.
+
+---
+
+## Your turn
+
+Open `tutorial_exercises/reactive_poll.R`.
+
+This app downloads an RSS feed and summarizes the results in a table. To refresh the results, you have to reload the page. (So 2003!)
+
+Modify this app using `reactivePoll` so that the results are always fresh.
+
+```{r echo=FALSE}
+countdown::countdown_timer(10 * 60)
+```

@@ -3,7 +3,9 @@ library(httr)
 library(xml2)
 library(magrittr)
 
-feedUrl <- "https://jchengdemo.wordpress.com/feed"
+feedUrl <- "https://jchengdemo.wordpress.com/feed/"
+# Or use http://lorem-rss.herokuapp.com/feed?unit=second&interval=5 for
+# more frequently updating (but less realistic) data
 
 ui <- fluidPage(
   tableOutput("entries")

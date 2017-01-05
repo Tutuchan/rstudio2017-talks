@@ -12,7 +12,7 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-  # Hint: httr::HEAD(feedUrl)$headers[["last-modified"]]
+  # Hint: httr::HEAD(feedUrl)$headers[c("last-modified", "etag")]
   
   # Retrieve the feed data and turn it into a data frame
   feed_xml <- read_xml(feedUrl)
