@@ -26,33 +26,61 @@ options(htmltools.dir.version = FALSE)
 ---
 
 ## Shiny 0.13 (January 2016)
-- Modules
-- Gadgets
-- Better error handling
-- `req()` (eliminate spurious errors)
+
+**Modules**  
+Break large apps into smaller pieces
+
+**Gadgets**  
+Make interactive tools that are usable from R
+
+**Error stack traces**  
+Much easier to fix errors
+
+**`req()`**  
+Eliminate spurious errors
 
 ---
 
 ## Shiny 0.14 (September 2016)
-- **Bookmarkable state**
-- Notifications
-- Modal dialogs
-- **`insertUI`/`removeUI`**
-- Automatic reconnection
+
+**Bookmarkable state**  
+Create shareable link to the exact state of an app
+
+**Notification messages**  
+Alert users to events
+
+**Modal dialogs**  
+Display task-oriented UI
+
+**`insertUI`/`removeUI`**  
+Dynamically add or remove pieces of UI
+
+**Automatic reconnection**  
+Recover gracefully from network issues
 
 ---
 
 ## Shiny 1.0 (January 2017)
-- Automated testing
-- Reactive `debounce` and `throttle`
-- Bug fixes
+
+**Automated testing**  
+New practical testing tools for Shiny apps
+
+**Reactive `debounce` and `throttle`**  
+Slow down overly chatty reactive inputs
+
+**Bug fixes**
 
 ---
 
 ## Near future
-- Create API endpoints (`GET` style)
 
-## On deck
+**API Endpoints**  
+Allow programs to retrieve data from Shiny apps
+
+**Better unit testing**  
+Official support for `testthat`-style unit testing
+
+### Up next...?
 - More API endpoints (`POST`/`PUT` style)
 - Better support for long-running calculations
 
@@ -76,25 +104,9 @@ class: middle
 
 ---
 
-## Three approaches to automated testing for Shiny
+## Introducing shinytest
 
---
-
-**Unit testing:** `testthat` style testing, for standalone functions that are part of your Shiny app [TBA]
-
---
-
-**Reactivity testing:** Given a set of input values, calculate the outputs (without a browser) [TBA]
-
---
-
-**Integration/system testing:** End-to-end testing of the Shiny app using a headless browser [Shiny v1.0]
-
----
-
-## Introducing `shinytest`
-
-It's our official solution for integration/system testing of Shiny apps.
+The `shinytest` package is our official solution for integration/system testing of Shiny apps.
 
 ```{r eval=FALSE}
 devtools::install_github("MangoTheCat/shinytest")
@@ -120,7 +132,7 @@ The test script(s) and their "last known good" snapshots are committed into sour
 
 --
 
-Running a test means executing the test script and comparing the resulting snapshot to the last known good snapshot. Any differences must be inspected and either fixed, or commited to the last known good snapshot.
+Running a test means executing the test script and comparing the resulting snapshot to the last known good snapshot. Any differences must be inspected and either fixed, or committed to the last known good snapshot.
 
 ---
 class: middle
@@ -188,6 +200,7 @@ class: middle
 - URL parameters or JSON request bodies become input values
 - A Shiny session is started for each HTTP request; the reactive loop executes once; then the session ends
 - Plots, CSV, text, JSON support "out of the box", easy to extend to any format
+- Authentication not yet supported
 - Currently intended for data retrieval APIs only — but stay tuned
 
 ---
